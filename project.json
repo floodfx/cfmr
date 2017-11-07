@@ -1,0 +1,8 @@
+{
+  "name": "cfmr",
+  "description": "cloud function based map/reduce",
+  "memory": 128,
+  "timeout": 60,
+  "role": "arn:aws:iam::262760327227:role/cfmr_lambda_function",
+  "environment": {}
+}
