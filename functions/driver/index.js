@@ -231,7 +231,7 @@ exports.handle = function(e, ctx, cb) {
               var allBuffer = Buffer.concat(buffers, totalLength)
               writePart(outputBucket, outputPrefix, jobId, allBuffer)
               .then(() => {
-                cb(null, { allBuffer, status: 'done' })
+                cb(null, { data: allBuffer.toString(), status: 'done' })
               })
               .catch((err) => {
                 cb(err)
