@@ -1,0 +1,22 @@
+{
+  "name": "cfmr",
+  "version": "0.0.2",
+  "description": "Cloud Function based Map/Reduce Framework",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "azure",
+    "functions",
+    "google",
+    "cloud",
+    "functions",
+    "map",
+    "reduce"
+  ],
+  "author": "Donnie Flood <npm@donnie.com>",
+  "license": "Apache2.0"
+}

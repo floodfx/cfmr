@@ -1,0 +1,14 @@
+{
+  "name": "cfmr-wordcount-reducer",
+  "version": "0.0.1",
+  "description": "WordCount Reducer Example for CFMR",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Donnie Flood <npm@donnie.com>",
+  "license": "ISC",
+  "dependencies": {
+    "cfmr": "0.0.2"
+  }
+}
