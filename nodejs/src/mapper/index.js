@@ -9,14 +9,14 @@ exports.connect = function(mapperFunction) {
     var mapKey = e.key;
 
     var emitter = new Emitter(
-      ctx.clientContext.outputBucket,
-      ctx.clientContext.outputPrefix,
-      ctx.clientContext.jobId,
+      ctx.clientContext.custom.outputBucket,
+      ctx.clientContext.custom.outputPrefix,
+      ctx.clientContext.custom.jobId,
       Emitter.TYPE_MAPPER
     )
 
     // get data
-    s3helper.getItem(ctx.clientContext.inputBucket, mapKey)
+    s3helper.getItem(ctx.clientContext.custom.inputBucket, mapKey)
     .then((data) => {
       console.log("key", mapKey, "data", data)
       // call map
