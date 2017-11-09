@@ -152,7 +152,7 @@ exports.handle = function(e, ctx, cb) {
     mapperArn,
     reducerArn
   }
-  var clientCtx = new Buffer(JSON.stringify(config)).toString('base64')
+  var clientCtx = new Buffer(JSON.stringify({custom:config})).toString('base64')
 
   // // start mapcoo function
   // // with given jobid

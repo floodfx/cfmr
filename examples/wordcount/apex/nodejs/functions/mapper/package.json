@@ -9,6 +9,6 @@
   "author": "Donnie Flood <npm@donnie.com>",
   "license": "ISC",
   "dependencies": {
-    "cfmr": "0.0.2"
+    "cfmr": "0.0.6"
   }
 }

@@ -1,0 +1,106 @@
+import os
+import boto3
+import logging
+import json
+import codecs
+import hashlib
+import binascii
+import inspect
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+s3 = boto3.resource('s3')
+
+class Emitter(object):
+
+    def __init__(self, outputBucket, outputPrefix, jobId, emitterType):
+        self.emitBuffer = []
+        self.outputBucket = outputBucket
+        self.outputPrefix = outputPrefix
+        self.jobId = jobId
+        self.emitterType = emitterType
+
+    def emit(self, key, value):
+        self.emitBuffer.append([key, value])
+
+    def flushEmits(self):
+        for x in self.emitBuffer:
+            self.flushEmit(x[0], x[1])
+
+    def flushEmit(self, key, value):
+        logger.info(f"flushing {key}, {value}")
+        keyIsBuffer = type(key).__name__ is 'bytes'
+        outputKey = codecs.encode(key, 'base64') if keyIsBuffer else key
+
+        valueIsBuffer = type(value).__name__ is 'bytes'
+        outputValue = codecs.encode(value, 'base64') if valueIsBuffer else value
+
+        # for S3 keys
+        h = hashlib.sha256()
+        if(keyIsBuffer):
+            h.update(key)
+        else:
+            h.update(key.encode('utf-8'))
+        partitionKey = h.hexdigest()
+        partKey = str(binascii.hexlify(os.urandom(16)), 'ascii')
+
+        flushKey = f"{self.outputPrefix}/{self.jobId}/{self.emitterType}/{partitionKey}/{partKey}"
+
+        logger.info(f"Flushing key: {key}, value: {value}, to s3://{self.outputBucket}/{flushKey}")
+
+        body = {
+          'key': outputKey,
+          'keyIsBase64': keyIsBuffer,
+          'value': outputValue,
+          'valueIsBase64': valueIsBuffer,
+        }
+        obj = s3.Object(self.outputBucket, flushKey)
+        obj.put(Body=json.dumps(body).encode('utf-8'))
+
+
+def reducer(event, ctx, reducerFunction):
+    logger.info('got event{}'.format(event))
+
+    emitter = Emitter(
+        ctx.client_context.custom['outputBucket'],
+        ctx.client_context.custom['outputPrefix'],
+        ctx.client_context.custom['jobId'],
+        "reducer"
+    )
+
+    reducerKey = event['key']
+    outputBucket = ctx.client_context.custom['outputBucket']
+
+    # TODO use parallel fetching
+    def getData(path):
+        obj = s3.Object(outputBucket, path)
+        return json.loads(obj.get()['Body'].read().decode('utf-8'))
+
+    # get items for this partition
+    allData = list(map(getData, event['value']))
+    logger.info(f"allData: {allData}")
+
+    # decode data
+    def decodeData(jsonData):
+        value = jsonData['value']
+        if(jsonData['valueIsBase64']):
+            return codecs.decode(value, 'base64')
+        else:
+            return value
+
+    values = list(map(decodeData, allData))
+
+    # decode key
+    key = allData[0]['key']
+    if(allData[0]['keyIsBase64']):
+        key = codecs.decode(key, 'base64')
+
+    # run reducer
+    reducerResult = reducerFunction(key, values, emitter)
+    logger.info('reducerResult{}'.format(reducerResult))
+    emitter.flushEmits()
+
+    return {
+        'reducerResult': reducerResult
+    }

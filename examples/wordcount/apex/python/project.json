@@ -1,0 +1,8 @@
+{
+  "name": "cfmr-example-python-wordcount",
+  "description": "Cloud Function Map/Reduce WordCount Examaple using Python",
+  "memory": 128,
+  "timeout": 60,
+  "role": "arn:aws:iam::262760327227:role/cfmr-example-python-wordcount_lambda_function",
+  "environment": {}
+}

@@ -1,9 +1,0 @@
-{
-  "inputBucket":"cfmr",
-  "inputPaths":["input/1.txt", "input/2.txt", "input/3.txt"],
-  "outputBucket":"cfmr",
-  "outputPrefix":"output",
-  "mapperArn":"arn:aws:lambda:us-west-2:262760327227:function:cfmr_mapper",
-  "reducerArn":"arn:aws:lambda:us-west-2:262760327227:function:cfmr_reducer",
-  "jobName":"WordCount"
-}
