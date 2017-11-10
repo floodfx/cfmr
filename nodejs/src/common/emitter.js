@@ -8,29 +8,39 @@ class Emitter {
     this.outputPrefix = outputPrefix;
     this.jobId = jobId;
     this.emitterType = emitterType;
-    this.emitBuffer = [];
+    this.emitBuffer = {};
   }
 
   emit(key, value) {
-    this.emitBuffer.push([key, value])
+    if(!this.emitBuffer[key]) {
+      this.emitBuffer[key] = []
+    }
+    this.emitBuffer[key].push(value)
   }
 
   flushEmits() {
-    var emits = [...this.emitBuffer]
-    this.emitBuffer = []
-    return Promise.all(emits.map((emit) => {
-      return this.flushEmit(...emit)
+    var emits = Object.assign({}, this.emitBuffer)
+    this.emitBuffer = {}
+    return Promise.all(Object.keys(emits).map((emitKey) => {
+      var emitValues = emits[emitKey]
+      return this.flushEmit(emitKey, emitValues)
     }))
   }
 
-  flushEmit(key, value) {
+  flushEmit(key, values) {
     // TODO do not allow keys or values to be undefined?
 
     var keyIsBuffer = Buffer.isBuffer(key)
     var outputKey = keyIsBuffer ? key.toString('base64') : key
 
-    var valueIsBuffer = Buffer.isBuffer(value)
-    var outputValue = valueIsBuffer ? value.toString('base64') : value
+    var outputValues = values.map((value) => {
+      var valueIsBuffer = Buffer.isBuffer(value)
+      var outputValue = valueIsBuffer ? value.toString('base64') : value
+      return {
+        value: outputValue,
+        valueIsBase64: valueIsBuffer
+      }
+    })
 
     // for S3 keys
     var partionKey = crypto.createHash('sha256').update(key).digest("hex")
@@ -38,13 +48,12 @@ class Emitter {
 
     var flushKey = `${this.outputPrefix}/${this.jobId}/${this.emitterType}/${partionKey}/${partKey}`
 
-    console.log("Flushing key:", key, "value:", value, ` to s3://${this.outputBucket}/${flushKey}`)
+    console.log("Flushing key:", key, "values:", outputValues, ` to s3://${this.outputBucket}/${flushKey}`)
 
     var body = {
       key: outputKey,
       keyIsBase64: keyIsBuffer,
-      value: outputValue,
-      valueIsBase64: valueIsBuffer,
+      values: outputValues
     }
     var params = {
       Body: JSON.stringify(body),

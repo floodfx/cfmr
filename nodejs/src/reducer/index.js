@@ -30,19 +30,26 @@ exports.connect = function(reducerFunction) {
     Promise.all(dataGetters)
     .then((allData) => {
       // decode data
-      var values = allData.map((data) => {
-        if(data.valueIsBase64) {
-          return new Buffer(data.value, 'base64')
-        } else {
-          return data.value
-        }
-      })
+      console.log("allData", allData)
+      var allValues = allData.reduce((values, data) => {
+        console.log("data", data, "values", values)
+        data.values.forEach((v) => {
+          console.log("v", v)
+          if(v.valueIsBase64) {
+            values.push(new Buffer(v.value, 'base64'))
+          } else {
+            values.push(v.value)
+          }
+        })
+        return values
+      }, [])
+      console.log("allValues", allValues)
       var key = allData[0].key
       if(allData[0].keyIsBase64) {
         key = new Buffer(key, 'base64')
       }
-      console.log("reducing with:", "key", key, "values", values)
-      var reduceResult = reducerFunction(key, values, emitter)
+      console.log("reducing with:", "key", key, "values", allValues)
+      var reduceResult = reducerFunction(key, allValues, emitter)
       console.log("reduceResult", reduceResult)
       // flush emits
       emitter.flushEmits().then((flushes) => {
@@ -51,7 +58,7 @@ exports.connect = function(reducerFunction) {
       })
     })
     .catch((err) => {
-      console.err(err)
+      console.log(err)
       cb(err)
     })
   }
