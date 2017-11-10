@@ -29,7 +29,7 @@ exports.connect = function(mapperFunction) {
       })
     })
     .catch((err) => {
-      console.error(err)
+      console.log(err)
       cb(err)
     })
   }
